@@ -1,0 +1,60 @@
+---
+title: "PA1_template"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### reading file
+
+```{r}
+df <- read.csv('activity.csv')
+```
+
+
+
+### What is mean total number of steps taken per day?
+For this part of the assignment, you can ignore the missing values in the dataset.
+
+
+```{r, message=FALSE}
+library(dplyr)
+a<- df %>% group_by(date) %>% summarise(total_steps = sum(steps, na.rm = TRUE))
+hist(a$total_steps)
+```
+```{r}
+summarise(a,mean = mean(a$total_steps,na.rm = TRUE), med =median(a$total_steps,na.rm = TRUE))
+```
+### What is the average daily activity pattern?
+
+```{r}
+b<- df %>% group_by(interval) %>% summarise(mean_steps = mean(steps, na.rm = TRUE))
+b %>% plot( type = "l")
+b$interval[which.max(b$mean_steps)]
+```
+### Imputing missing values
+Note that there are a number of days/intervals where there are missing values (coded as \color{red}{\verb|NA|}NA). The presence of missing days may introduce bias into some calculations or summaries of the data
+
+```{r}
+sum(is.na(df))
+```
+
+```{r}
+#strategy: filling everything with 1
+df2 <- df 
+df2[is.na(df2)] <- 1
+c<- df2 %>% group_by(date) %>% summarise(total_steps = sum(steps))
+hist(c$total_steps)
+c %>% summarise(mean = mean(total_steps), med =median(total_steps))
+```
+### Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+library(ggplot2)
+df2$weekday <- ifelse(weekdays(as.Date(df2$date)) %in% c('Sunday','Saturday'),'Weekend','Weekday')
+d<- df2 %>% group_by(interval,weekday) %>% summarise(avg_steps = mean(steps))
+d %>% ggplot(aes(interval,avg_steps)) +geom_line() +facet_wrap(~weekday)
+```
+
